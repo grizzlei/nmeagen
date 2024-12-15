@@ -199,6 +199,16 @@ function expect(condition, message) {
 
 /*******************************************************************************
  *
+ *    UTILITY FUNCTIONS
+ *
+ ******************************************************************************/
+
+function mapValue(value, oldMin, oldMax, newMin, newMax) {
+  return ((value - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
+}
+
+/*******************************************************************************
+ *
  *    POINT FUNCTIONS
  *
  ******************************************************************************/
@@ -224,6 +234,7 @@ function addPoint(coordinates) {
     .on("click", onPointClick)
     .addTo(map);
   pointArray.push(point);
+  updateCurvePoints(pointArray);
 }
 
 /**
@@ -235,6 +246,7 @@ function removePoint(point) {
   map.removeLayer(point);
   pointArray.splice(pointArray.indexOf(point), 1);
   redrawOrientedSegments();
+  updateCurvePoints(pointArray);
 }
 
 /**
@@ -245,6 +257,7 @@ function removeAllPoints() {
     map.removeLayer(point);
   }
   pointArray.length = 0;
+  updateCurvePoints(pointArray);
 }
 
 /**
@@ -343,6 +356,18 @@ function getSpeedAtPointKnots(pointIndex) {
     return null;
   }
   return getSpeedAtPointMps(pointIndex) * 1.943844;
+}
+
+/**
+ * Returns the height above ellipsoid of a point
+ * @param {Number} pointIndex Point index (position on pointArray).
+ */
+function getAltitudeAtPoint(pointIndex) {
+  if (altitudeCurvePoints.length < 2)
+  {
+    return null;
+  }
+  return mapValue(altitudeCurvePoints[pointIndex].y, 0, 1, 0, maxAltitude)
 }
 
 /**
@@ -1261,6 +1286,7 @@ function generateNmeaData() {
     let point = pointArray[i];
     let pointDate = getTimeForPoint(i);
     let pointCoordinates = point.getLatLng();
+    let heightAboveEllipsoid = getAltitudeAtPoint(i) + geoidUndulation;
 
     // Both dgpsUpdate and dgpsReference can be omitted.
     const ggaData = {
@@ -1270,8 +1296,8 @@ function generateNmeaData() {
       fix: 1,
       satellites: numSatellites,
       hdop: 1.0,
-      altitude: 0.0,
-      aboveGeoid: 0.0
+      altitude: heightAboveEllipsoid,
+      aboveGeoid: geoidUndulation
     };
     const rmcData = {
       date: pointDate,
@@ -1715,9 +1741,12 @@ function onGenerateNmeaFileButtonClick() {
  */
 function generateCsvData() {
   let text = "";
-  for (const point of pointArray) {
-    const coordinates = point.getLatLng();
-    text += coordinates.lat + "," + coordinates.lng + "\n";
+
+  for(let i = 0; i < pointArray.length; i++)
+  {
+    const coordinates = pointArray[i].getLatLng();
+    const altitude = mapValue(altitudeCurvePoints[i].y, 0, 1, 0, maxAltitude) + geoidUndulation;
+    text += coordinates.lat + "," + coordinates.lng + "," + altitude + "\n";
   }
   return text;
 }
