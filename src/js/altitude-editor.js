@@ -43,7 +43,7 @@ const draw = () => {
   const fontSize = 10;
   ctx.fillStyle = '#000';
   ctx.font = `${fontSize}px Arial`;
-  ctx.fillText(`Max. Altitude: ${maxAltitude} \tm`,margin, margin - fontSize);
+  ctx.fillText(`Max. Altitude (HAE): ${maxAltitude} \tm`,margin, margin - fontSize);
   ctx.fillText(`Geoidal Separation: ${geoidUndulation} \tm`,margin, canvasHeight - margin + fontSize * 2);
   ctx.stroke();
 

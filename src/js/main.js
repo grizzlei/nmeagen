@@ -362,7 +362,7 @@ function getSpeedAtPointKnots(pointIndex) {
  * Returns the height above ellipsoid of a point
  * @param {Number} pointIndex Point index (position on pointArray).
  */
-function getAltitudeAtPoint(pointIndex) {
+function getHeightAboveEllipsoidAtPoint(pointIndex) {
   if (altitudeCurvePoints.length < 2)
   {
     return null;
@@ -1286,7 +1286,6 @@ function generateNmeaData() {
     let point = pointArray[i];
     let pointDate = getTimeForPoint(i);
     let pointCoordinates = point.getLatLng();
-    let heightAboveEllipsoid = getAltitudeAtPoint(i) + geoidUndulation;
 
     // Both dgpsUpdate and dgpsReference can be omitted.
     const ggaData = {
@@ -1296,7 +1295,7 @@ function generateNmeaData() {
       fix: 1,
       satellites: numSatellites,
       hdop: 1.0,
-      altitude: heightAboveEllipsoid,
+      altitude: getHeightAboveEllipsoidAtPoint(i),
       aboveGeoid: geoidUndulation
     };
     const rmcData = {
@@ -1745,7 +1744,7 @@ function generateCsvData() {
   for(let i = 0; i < pointArray.length; i++)
   {
     const coordinates = pointArray[i].getLatLng();
-    const altitude = mapValue(altitudeCurvePoints[i].y, 0, 1, 0, maxAltitude) + geoidUndulation;
+    const altitude = mapValue(altitudeCurvePoints[i].y, 0, 1, 0, maxAltitude);
     text += coordinates.lat + "," + coordinates.lng + "," + altitude + "\n";
   }
   return text;
